@@ -67,3 +67,17 @@ resource "aws_iam_instance_profile" "session-manager" {
   name  = "session-manager"
   role  = aws_iam_role.session-manager.name
 }
+
+data "aws_iam_policy_document" "allow_access_from_alb" {
+  version = "2012-10-17"
+  statement {
+    principals {
+      type = "AWS"
+      identifiers = ["${local.alb_root_account_id}"]
+    }
+      sid = "AllowELBRootAccount"
+      effect = "Allow"
+      actions = ["s3:PutObject"]
+      resources = ["arn:aws:s3:::curtnet-s3-bucket","${aws_s3_bucket.curtnet_s3_bucket.arn}/*"]
+    }
+}

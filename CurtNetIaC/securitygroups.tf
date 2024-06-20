@@ -6,12 +6,6 @@ resource "aws_security_group" "load-balancer" {
   vpc_id      = local.vpcid
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -29,7 +23,7 @@ resource "aws_security_group" "load-balancer" {
 # Instance Security group (traffic ALB -> EC2, ssh -> EC2)
 resource "aws_security_group" "ec2" {
   name        = "ec2_security_group"
-  description = "Allows inbound access from the ALB only"
+  description = "Allows inbound access from the NGW and ALB only"
   vpc_id      = local.vpcid
 
   ingress {

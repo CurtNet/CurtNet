@@ -21,7 +21,7 @@ output "privateSubnets_ids" {
 }
 output "databaseSubnets_ids" {
   description = "databaseSubnets IDs"
-  value = aws_subnet.aws_db_subnets[*].id
+  value = aws_db_subnet_group.aws_db_subnets[*].id
 }
 output "IGW_id" {
   description = "internet gateway id"
@@ -35,10 +35,10 @@ output "priroutetable_id" {
   description = "Private route table id"
   value = aws_route_table.curtnet_priv_RT[*].id
 }
-output "dbroutetable_id" {
-  description = "db route table id"
-  value = aws_route_table.curtnet_db_RT[*].id
-}
+# output "dbroutetable_id" {
+#   description = "db route table id"
+#   value = aws_route_table.curtnet_db_RT[*].id
+# }
 output "alb_dns" {
   value = aws_lb.curtnet_alb[*].dns_name
 }

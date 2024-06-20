@@ -1,138 +1,148 @@
-#Creating a vpc
-resource "aws_vpc" "terra_vpc" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_vpc" "curtnet_vpc" {
+  cidr_block            = var.vpc_cidr
+  enable_dns_hostnames  = true
+  enable_dns_support    = true
   tags = {
-    name = "my_vpc"
+    name                = "curtnet-vpc"
   }
 }
 
-#Creating an Internet GateWay IGW
-resource "aws_internet_gateway" "terra_IGW" {
-  vpc_id = aws_vpc.terra_vpc.id
-  tags = {
-    name = "my_IGW"
-  }
+data "aws_availability_zones" "available" {}
+locals {
+  vpcid           = aws_vpc.curtnet_vpc.id
+  #Takes the first X(var.azcount) amount of availability zones
+  azs             = slice(data.aws_availability_zones.available.names, 0, var.azcount)
+#cidrsubnet(prefix, newbits, netnum) i.e for vpc cidr block 172.27.0.0/16 and 3 AZs Private subnets 172.27.0.0/20, 172.27.16.0/20, 172.27.32.0/20; Public subnets 172.27.100.0/24, 172.27.101.0/24, 172.27.102.0/24
+  private_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 4, k)]
+  public_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 100)]
+  db_subnets      = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 150)]
+  alb_root_account_id = "009996457667" ##### for Paris eu-west-3
+}
+resource "aws_s3_bucket" "curtnet_s3_bucket" {
+  bucket                = "curtnet-s3-bucket"
+}
+resource "aws_s3_bucket_policy" "aws_s3_bucket_policy_curtnet_alb" {
+  bucket = aws_s3_bucket.curtnet_s3_bucket.id
+  policy = data.aws_iam_policy_document.allow_access_from_alb.json
 }
 
-#Creating a custom route table
-resource "aws_route_table" "terra_route_table" {
-  vpc_id = aws_vpc.terra_vpc.id
+#############Public, Private and Database subnets #############
+
+resource "aws_subnet" "aws_pub_subnets" {
+  count             = length(local.azs)
+  availability_zone = local.azs[count.index]
+  cidr_block        = local.public_subnets[count.index]
+  vpc_id            = local.vpcid
+}
+resource "aws_subnet" "aws_priv_subnets" {
+  count             = length(local.azs)
+  availability_zone = local.azs[count.index]
+  cidr_block        = local.private_subnets[count.index]
+  vpc_id            = local.vpcid
+}
+resource "aws_subnet" "aws_db_subnets" {
+  count             = length(local.azs)
+  availability_zone = local.azs[count.index]
+  cidr_block        = local.db_subnets[count.index]
+  vpc_id            = local.vpcid
+}
+resource "aws_db_subnet_group" "aws_db_subnets" {
+  subnet_ids        = toset(aws_subnet.aws_db_subnets[*].id)
   tags = {
-    name = "my_route_table"
+    name = "db_subnet"
   }
 }
+#############END Public, Private and Database subnets #############
+############# Internet Gateway for vpc #############
+resource "aws_internet_gateway" "curtnet_igw" {
+  vpc_id = local.vpcid
+  tags = {
+    name = "curtnet-igw"
+  }
+}
+############# NAT Gateway for public subnet #############
 
-#Create route
-resource "aws_route" "terra-route" {
+resource "aws_eip" "elasticIP" {
+  count                     = length(aws_subnet.aws_pub_subnets)
+  depends_on                = [aws_internet_gateway.curtnet_igw]
+  tags = {
+    name                    = "eip-ngw-${count.index}"
+  }
+}
+resource "aws_nat_gateway" "curtnet_ngw_pub" {
+  
+  count         = length(aws_subnet.aws_pub_subnets)
+  subnet_id     = aws_subnet.aws_pub_subnets[count.index].id
+  allocation_id = aws_eip.elasticIP[count.index].id
+  depends_on    = [aws_eip.elasticIP, aws_subnet.aws_pub_subnets]
+  tags = {
+    Name        = "curtnet-ngw-${count.index}"
+  }
+  
+}
+
+############# Public, Private, Database Routing Tables #############
+resource "aws_route_table" "curtnet_pub_RT"{
+  vpc_id = local.vpcid
+  count  = length(aws_subnet.aws_pub_subnets)
+  tags = {
+    name = "curtnet-pub-RT-${count.index}"
+}
+}
+resource "aws_route_table" "curtnet_priv_RT"{
+  vpc_id = local.vpcid
+  count  = length(aws_subnet.aws_priv_subnets)
+  tags = {
+    name = "curtnet-pri-RT-${count.index}"
+}
+}
+ resource "aws_route_table" "curtnet_db_RT"{
+  vpc_id = local.vpcid
+  count = length(aws_subnet.aws_db_subnets)
+  tags = {
+    name = "curtnet-db-RT-${count.index}"
+}
+}
+#############END Public, Private, Database Routing Tables #############
+############# Routes #############
+#pub to internet gateway
+# resource "aws_route" "public_internet_igw_route"{
+#   count                  = length(aws_route_table.curtnet_pub_RT)
+#   route_table_id         = aws_route_table.curtnet_pub_RT[count.index].id
+#   gateway_id             = aws_internet_gateway.curtnet_igw.id
+#   destination_cidr_block = "0.0.0.0/0"
+# }
+resource "aws_route" "pub_ngw_route"{
+  count                  = length(aws_subnet.aws_pub_subnets)
+  route_table_id         = aws_route_table.curtnet_pub_RT[count.index].id
+  nat_gateway_id         = aws_nat_gateway.curtnet_ngw_pub[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.terra_IGW.id
-  route_table_id = aws_route_table.terra_route_table.id
 }
-
-#Create Subnet
-resource "aws_subnet" "terra_subnet" {
-  vpc_id = aws_vpc.terra_vpc.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = var.availability_zone
-
-  tags = {
-    name = "my_subnet"
-  }
+resource "aws_route" "private_public_route"{
+  count                  = length(aws_subnet.aws_priv_subnets)
+  route_table_id         = aws_route_table.curtnet_priv_RT[count.index].id
+  nat_gateway_id         = aws_nat_gateway.curtnet_ngw_pub[count.index].id
+  destination_cidr_block = "0.0.0.0/0"
 }
-
-#Associating IGW to Route Table by subnet
-resource "aws_route_table_association" "terra_assoc" {
-  subnet_id = aws_subnet.terra_subnet.id
-  route_table_id = aws_route_table.terra_route_table.id
+#Associate tables to subnets
+resource "aws_route_table_association" "public_route_association"{
+  count          = length(aws_subnet.aws_pub_subnets)
+  route_table_id = aws_route_table.curtnet_pub_RT[count.index].id
+  subnet_id      = aws_subnet.aws_pub_subnets[count.index].id
 }
-
-#Creating security group to allow ingoing ports
-resource "aws_security_group" "terra_SG" {
-  name = "sec_group"
-  description = "security group for EC2 Instance"
-  vpc_id = aws_vpc.terra_vpc.id
-  ingress = [
-  {
-    description = "https traffic"
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0", aws_vpc.terra_vpc.cidr_block]
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-    },
-    {
-    description = "http traffic"
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0", aws_vpc.terra_vpc.cidr_block]
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-    },
-    {
-    description = "ssh traffic"
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0", aws_vpc.terra_vpc.cidr_block]
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-    }
-  ]
-  egress = [
-  {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Outbound traffic rule"
-    ipv6_cidr_blocks = []
-    prefix_list_ids = []
-    security_groups = []
-    self = false
-  }
-  ]
-  tags = {
-    name = "allow_web"
-  }
+resource "aws_route_table_association" "private_route_association"{
+  count          = length(aws_subnet.aws_priv_subnets)
+  route_table_id = aws_route_table.curtnet_priv_RT[count.index].id
+  subnet_id      = aws_subnet.aws_priv_subnets[count.index].id
 }
-
-#Creating a network interface with private ip from step 4
-resource "aws_network_interface" "terra_net_interface" {
-  subnet_id = aws_subnet.terra_subnet.id
-  security_groups = [aws_security_group.terra_SG.id]
-}
-
-# assigning elasic IP to network interface
-resource "aws_eip" "terra_eip" {
-  domain = "vpc"
-  network_interface = aws_network_interface.terra_net_interface.id
-  associate_with_private_ip = aws_network_interface.terra_net_interface.private_ip
-  depends_on = [aws_internet_gateway.terra_IGW, aws_instance.terra_ec2]
-}
-resource "aws_key_pair" "ec2_key" {
-  key_name = "ec2_key"
-  public_key = file("${path.module}/ec2_key.pub")
-}
-resource "aws_instance" "terra_ec2" {
-  ami = var.ami
-  instance_type = var.instance_type
-  availability_zone = var.availability_zone
-  key_name = "ec2_key"
-  network_interface {
-    device_index = 0
-    network_interface_id = aws_network_interface.terra_net_interface.id
-  }
-  user_data = file("${path.module}/user_data.sh")
-
-  tags = {
-    name = "web_server"
-  }
-}
+ resource "aws_route_table_association" "database_route_association"{
+   count          = length(aws_subnet.aws_priv_subnets)
+   route_table_id = aws_route_table.curtnet_db_RT[count.index].id
+   subnet_id      = aws_subnet.aws_db_subnets[count.index].id
+ }
+#############END Routes #############
+############# Key Pairs for EC2 instances #############
+  resource "aws_key_pair" "curtnet_kp" {
+  key_name   = "${var.ec2_instance_name}_key_pair"
+  public_key = file(var.ssh_pubkey_file)
+ }

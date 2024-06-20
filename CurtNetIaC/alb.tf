@@ -7,7 +7,12 @@ resource "aws_lb" "curtnet_alb" {
   subnets            = aws_subnet.aws_pub_subnets[*].id
   access_logs {
     bucket = aws_s3_bucket.curtnet_s3_bucket.id
-    prefix = "lb-${count.index}"
+    prefix = "access-logs-${count.index}"
+  }
+  connection_logs {
+    bucket  = aws_s3_bucket.curtnet_s3_bucket.id
+    enabled = true
+    prefix  = "connection-logs-${count.index}"
   }
 }
 # Target group
