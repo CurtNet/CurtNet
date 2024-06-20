@@ -1,33 +1,50 @@
 output "vpc_id" {
   description = "vpc id"
-  value = aws_vpc.terra_vpc.id
+  value = aws_vpc.curtnet_vpc.id
 }
-
-output "subnet_id" {
-  description = "private IP (subnet)"
-  value = aws_subnet.terra_subnet.id
+output "publicIP" {
+  value = local.public_subnets
+}
+output "privateIP" {
+  value = local.private_subnets
+}
+output "databaseIP" {
+  value = local.db_subnets
+}
+output "publicSubnets_ids" {
+  description = "publicSubnets IDs"
+  value = aws_subnet.aws_pub_subnets[*].id
+}
+output "privateSubnets_ids" {
+  description = "privateSubnets IDs"
+  value = aws_subnet.aws_priv_subnets[*].id
+}
+output "databaseSubnets_ids" {
+  description = "databaseSubnets IDs"
+  value = aws_subnet.aws_db_subnets[*].id
 }
 output "IGW_id" {
   description = "internet gateway id"
-  value = aws_internet_gateway.terra_IGW.id
+  value = aws_internet_gateway.curtnet_igw.id
 }
-output "routetable_id" {
-    description = "route table id"
-    value = aws_route_table.terra_route_table.id
+output "pubroutetable_id" {
+  description = "Public route table id"
+  value = aws_route_table.curtnet_pub_RT[*].id
 }
-output "SG_id" {
-    description = "security group id"
-    value = aws_security_group.terra_SG.id
+output "priroutetable_id" {
+  description = "Private route table id"
+  value = aws_route_table.curtnet_priv_RT[*].id
 }
-output "eip" {
-    description = "public Ip of eip"
-    value = aws_eip.terra_eip.public_ip
+output "dbroutetable_id" {
+  description = "db route table id"
+  value = aws_route_table.curtnet_db_RT[*].id
 }
-output "instance_id" {
-  description = "ID of the EC2 instance"
-  value       = aws_instance.terra_ec2.id
+output "alb_dns" {
+  value = aws_lb.curtnet_alb[*].dns_name
 }
-output "instance_public_ip" {
-  description = "Public IP address of the EC2 instance"
-  value       = aws_instance.terra_ec2.private_ip
+output "alb_zone" {
+  value = aws_lb.curtnet_alb[*].zone_id
+}
+output "azsSel" {
+  value = local.azs
 }
