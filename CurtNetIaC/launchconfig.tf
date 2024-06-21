@@ -4,11 +4,11 @@ resource "aws_instance" "bastion" {
   instance_type               = "${var.instance_type}"
   key_name                    = aws_key_pair.curtnet_kp.key_name
   iam_instance_profile        = aws_iam_instance_profile.session-manager.id
-  associate_public_ip_address = true
+  associate_public_ip_address = false
   security_groups            = [aws_security_group.ec2.id]
-  subnet_id                   = aws_subnet.aws_pub_subnets[count.index].id
+  subnet_id                   = aws_subnet.aws_priv_subnets[count.index].id
   tags = {
-    Name = "Bastion"
+    Name = "bastion"
   }
 }
 resource "aws_launch_configuration" "ec2" {
@@ -29,7 +29,7 @@ resource "aws_launch_configuration" "ec2" {
   docker pull nginx
   docker tag nginx my-nginx
   docker run --rm --name nginx-server -d -p 80:80 -t my-nginx
-  echo "Hello World!!" | sudo tee /usr/share/nginx/html/index.html
+  echo "Hello World!! You are connected to ${var.ec2_instance_name}" | sudo tee /usr/share/nginx/html/index.html
   EOL
   depends_on = [aws_nat_gateway.curtnet_ngw_pub]
 }
@@ -42,5 +42,5 @@ resource "aws_autoscaling_group" "ec2-cluster" {
   health_check_type    = "EC2"
   launch_configuration = aws_launch_configuration.ec2.name
   vpc_zone_identifier  = [aws_subnet.aws_priv_subnets[count.index].id]
-  target_group_arns    = [aws_alb_target_group.default-target-group[count.index].arn]
+  target_group_arns    = [aws_alb_target_group.http-target-group[count.index].arn]
 }
