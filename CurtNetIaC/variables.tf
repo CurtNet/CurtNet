@@ -7,7 +7,7 @@ variable "vpc_cidr" {
   default     = "172.27.0.0/16"
 }
 variable "azcount" {
-  description = "The amount of AZs to use, this allows expansion for futher redunancy and higher availability"
+  description = "The amount of AZs to use, this allows expansion for futher redunancy and higher availability, Minimum must be 2 for RDS DB to work"
   default     = "3"
 }
 variable "autoscale_min" {

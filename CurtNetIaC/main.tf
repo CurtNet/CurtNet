@@ -85,9 +85,8 @@ resource "aws_nat_gateway" "curtnet_ngw_pub" {
 ############# Public, Private, Database Routing Tables #############
 resource "aws_route_table" "curtnet_pub_RT"{
   vpc_id = local.vpcid
-  count  = length(aws_subnet.aws_pub_subnets)
   tags = {
-    name = "curtnet-pub-RT-${count.index}"
+    name = "curtnet-pub-RT"
 }
 }
 resource "aws_route_table" "curtnet_priv_RT"{
@@ -107,28 +106,23 @@ resource "aws_route_table" "curtnet_priv_RT"{
 #############END Public, Private, Database Routing Tables #############
 ############# Routes #############
 #pub to internet gateway
-# resource "aws_route" "public_internet_igw_route"{
-#   count                  = length(aws_route_table.curtnet_pub_RT)
-#   route_table_id         = aws_route_table.curtnet_pub_RT[count.index].id
-#   gateway_id             = aws_internet_gateway.curtnet_igw.id
-#   destination_cidr_block = "0.0.0.0/0"
-# }
-resource "aws_route" "pub_ngw_route"{
-  count                  = length(aws_subnet.aws_pub_subnets)
-  route_table_id         = aws_route_table.curtnet_pub_RT[count.index].id
-  nat_gateway_id         = aws_nat_gateway.curtnet_ngw_pub[count.index].id
+ resource "aws_route" "public_internet_igw_route"{
+  route_table_id         = aws_route_table.curtnet_pub_RT.id
+  gateway_id             = aws_internet_gateway.curtnet_igw.id
   destination_cidr_block = "0.0.0.0/0"
-}
+
+ }
 resource "aws_route" "private_public_route"{
   count                  = length(aws_subnet.aws_priv_subnets)
   route_table_id         = aws_route_table.curtnet_priv_RT[count.index].id
   nat_gateway_id         = aws_nat_gateway.curtnet_ngw_pub[count.index].id
   destination_cidr_block = "0.0.0.0/0"
 }
+
 #Associate tables to subnets
 resource "aws_route_table_association" "public_route_association"{
   count          = length(aws_subnet.aws_pub_subnets)
-  route_table_id = aws_route_table.curtnet_pub_RT[count.index].id
+  route_table_id = aws_route_table.curtnet_pub_RT.id
   subnet_id      = aws_subnet.aws_pub_subnets[count.index].id
 }
 resource "aws_route_table_association" "private_route_association"{

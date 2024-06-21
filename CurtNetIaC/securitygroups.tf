@@ -11,7 +11,6 @@ resource "aws_security_group" "load-balancer" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   egress {
     from_port   = 0
     to_port     = 0
@@ -23,7 +22,7 @@ resource "aws_security_group" "load-balancer" {
 # Instance Security group (traffic ALB -> EC2, ssh -> EC2)
 resource "aws_security_group" "ec2" {
   name        = "ec2_security_group"
-  description = "Allows inbound access from the NGW and ALB only"
+  description = "Allows inbound access from the NGW and ALB only and outbound to any"
   vpc_id      = local.vpcid
 
   ingress {
