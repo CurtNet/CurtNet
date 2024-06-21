@@ -2,6 +2,7 @@ resource "aws_vpc" "curtnet_vpc" {
   cidr_block            = var.vpc_cidr
   enable_dns_hostnames  = true
   enable_dns_support    = true
+
   tags = {
     name                = "curtnet-vpc"
   }
@@ -49,7 +50,7 @@ resource "aws_subnet" "aws_db_subnets" {
 resource "aws_db_subnet_group" "aws_db_subnets" {
   subnet_ids        = toset(aws_subnet.aws_db_subnets[*].id)
   tags = {
-    name = "db_subnet"
+    name = "db-subnets-grp"
   }
 }
 #############END Public, Private and Database subnets #############
