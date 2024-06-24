@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+	<link rel="stylesheet" href="styles.css">
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Hello World!</title>
 		<?php
 			// DB Connection
-		 $servername = "<<Enter RDS endpoint output here>>";
+		 $servername = "localhost";
          $username = "root";
          $password = "empty";
-         $databasename = "placeholder";
+         $databasename = "hw-website";
          $conn = mysqli_connect($servername, $username, $password, $databasename);
         $query = "SELECT * FROM test";
         ?>
@@ -43,6 +43,8 @@
          </form>
 
 <div>
+	<h2>Database</h2>
+<p>To test push and pull RDS database information. <b>Important please enter false data, as this will be displayed publicly!</b></p>
 	<p>Previously Entered Data:</p>
 	<table>
 		<tr>
@@ -51,45 +53,43 @@
 			<th>Email Address</th>
 		</tr>
 		<?php
-		if($conn === true){
-			    while ($row = $result->fetch_assoc()) 
-			    {
-			        $fname = $row["col1"];
-			        $sname = $row["col2"];
-			        $email = $row["col3"];
-			        echo '<tr> 
-			                  <td>'.$fname.'</td>
-			                  <td>'.$sname.'</td>
-			                  <td>'.$email.'</td>
-			              </tr>';
-			    }
-    		}
-    		else
-    		{
+			// if ($result = $conn->query($query)) {
+			//     while ($row = $result->fetch_assoc()) 
+			//     {
+			//         $fname = $row["col1"];
+			//         $sname = $row["col2"];
+			//         $email = $row["col3"];
+			//         echo '<tr> 
+			//                   <td>'.$fname.'</td>
+			//                   <td>'.$sname.'</td>
+			//                   <td>'.$email.'</td>
+			//               </tr>';
+			//     }
+    		// }
+    		// else
+    		// {
     			echo '<tr>
     					<td>No Entries Yet</td>
     					<td>n/a</td>
     					<td>n/a</td>
     				</tr>';
-    		}
+    		// }
 		?>
 	</table>
 </div>
-<p>Whilst you're here take a look at some of my favourite foods</p>
+<h2>Whilst you're here take a look at some of my favourite foods I've made</h2>
 
-<h2>Chicken Tikka Massala</h2>
+<h3>Chicken Tikka Massala</h3>
 <p>Despite common misconception this dish was infact created in the UK, which most people would believe it was Indian. Much like me!</p>
 
-<h2>Curtis' Bolognese</h2>
+<h3>Curtis' Bolognese</h3>
 <p>Most people leave out the Sofrito/Mirepoix</p>
 
-<h2>Sourdough</h2>
+<h3>Sourdough</h3>
 <p>Precision, Patience and time is key here.</p>
 
-<h2>Croissant</h2>
+<h3>Croissant</h3>
 <p>Buttery and best enjoyed fresh from the oven.</p>
 
-<h3>Database Form</h3>
-<p>To test push and pull RDS database information. <b>Important please enter false data, as this will be displayed publicly!</b></p>
 </body>
 </html>
