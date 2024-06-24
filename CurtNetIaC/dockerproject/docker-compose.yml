@@ -1,0 +1,16 @@
+services:
+   nginx:
+     build: ./CurtNetWebnginx/
+     ports:
+       - 80:80
+  
+     volumes:
+         - ./CurtNetWebPHP/:/var/www/html/
+
+   php:
+     build: ./CurtNetWebPHP/
+     expose:
+       - 9000
+     volumes:
+        - ./CurtNetWebPHP/:/var/www/html/
+        

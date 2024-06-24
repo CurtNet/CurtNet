@@ -26,10 +26,10 @@ resource "aws_launch_configuration" "ec2" {
   sudo service docker start
   sudo usermod -a -G docker ec2-user
   sudo chmod 666 /var/run/docker.sock
-  docker pull nginx
+  docker pull curtnet-web:
   docker tag nginx my-nginx
   docker run --rm --name nginx-server -d -p 80:80 -t my-nginx
-  echo "Hello World!! You are connected to ${var.ec2_instance_name}" | sudo tee /usr/share/nginx/html/index.html
+  echo "Hello World!!" | sudo tee /usr/share/nginx/html/index.html
   EOL
   depends_on = [aws_nat_gateway.curtnet_ngw_pub]
 }

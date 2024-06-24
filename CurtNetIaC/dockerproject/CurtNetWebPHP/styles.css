@@ -1,0 +1,17 @@
+img
+{
+	display: block;
+	width: 250px;
+}
+body
+{
+	font-family: bell, sans-serif;
+}
+a#cv{
+padding: 10px;
+    background: red;
+    border-radius: 10px;
+    display: inline-block;
+    text-align: center;
+    color: white;
+}
