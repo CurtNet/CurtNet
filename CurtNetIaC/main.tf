@@ -26,6 +26,9 @@ resource "aws_s3_bucket_policy" "aws_s3_bucket_policy_curtnet_alb" {
   bucket = aws_s3_bucket.curtnet_s3_bucket.id
   policy = data.aws_iam_policy_document.allow_access_from_alb.json
 }
+resource "aws_ecr_repository" "app_ecr_repo" {
+  name = "app-repo"
+}
 
 #############Public, Private and Database subnets #############
 

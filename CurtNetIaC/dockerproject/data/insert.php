@@ -8,18 +8,11 @@
 <body>
     <center>
         <?php
-
-        // DB Connection
-        $servername = "<<Enter RDS endpoint output here>>";
-        $username = "root";
-        $password = "empty";
-        $databasename = "placeholder";
-        $conn = mysqli_connect($servername, $username, $password, $databasename);
-        
+        include('db.php')
         // Check connection
-        if($conn === false){
-            die("ERROR: Could not connect. "
-                . mysqli_connect_error());
+        if (!$conn) {
+          echo "Failed to connect to MySQL: " . $mysqli -> connect_error;
+          exit();
         }
         
         // Taking all 3 values from the form data(input)

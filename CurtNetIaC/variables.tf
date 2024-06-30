@@ -43,3 +43,20 @@ variable "ec2_instance_name" {
   description = "Name of the EC2 instance"
   default     = "curtnet-web"
 }
+variable "docker_compose_curtweb" {
+  type = string
+  default     = <<EOF
+  services:
+  nginx:
+    image: "curtnet/curtwebnginx"
+    ports: 80:80
+    volumes:
+         - ./CurtNetWebPHP/:/var/www/html/
+  php:
+    image: "curtnet/curtwebphp"
+    expose:
+        - 9000
+      volumes:
+        - ./CurtNetWebPHP/:/var/www/html/
+EOF
+}

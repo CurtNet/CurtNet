@@ -6,25 +6,24 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Hello World!</title>
 		<?php
-			// DB Connection
-		 $servername = "localhost";
-         $username = "root";
-         $password = "empty";
-         $databasename = "hw-website";
-         $conn = mysqli_connect($servername, $username, $password, $databasename);
+		include('db.php');
         $query = "SELECT * FROM test";
+        var_dump($dsn);
         ?>
 </head>
 <body>
 <h1>Hello World!</h1>
-<p>You're seeing this as a result of a working Terraform assisted AWS Deployment, on one of 3 ALBs to an EC2 cluster of 2 scaling to 4 if required, this has been Docker containerise and picked up by the EC2 Instance serving you right now!</p>
-
+<p>You're seeing this as a result of a working Terraform assisted AWS Deployment, on one of 3 ALBs to an EC2 cluster of 2 scaling to 4 if required, this has been Docker containerised and picked up by the EC2 Instance serving you right now!</p>
+<p>Host you are connected to right now: <?php echo $_SERVER['SERVER_NAME']; ?></p>
 <p>Here is my latest CV</p>
 <a id="cv" href="files/curtismahadevan24062024.pdf" download>Click here to download
 <img src="files/curtismahadevan24062024scrnshot.png">
 </a>
 
-<form action="insert.php" method="post">
+<div>
+	<h2>Database</h2>
+<p>To test push and pull RDS database information. <b>Important please enter false data, as this will be displayed publicly!</b></p>
+	<form action="insert.php" method="post">
             
 <p>
                <label for="firstName">First Name:</label>
@@ -41,11 +40,7 @@
 
             <input type="submit" value="Submit">
          </form>
-
-<div>
-	<h2>Database</h2>
-<p>To test push and pull RDS database information. <b>Important please enter false data, as this will be displayed publicly!</b></p>
-	<p>Previously Entered Data:</p>
+         <p>Previously Entered Data:</p>
 	<table>
 		<tr>
 			<th>First Name</th>
@@ -53,27 +48,36 @@
 			<th>Email Address</th>
 		</tr>
 		<?php
-			// if ($result = $conn->query($query)) {
-			//     while ($row = $result->fetch_assoc()) 
-			//     {
-			//         $fname = $row["col1"];
-			//         $sname = $row["col2"];
-			//         $email = $row["col3"];
-			//         echo '<tr> 
-			//                   <td>'.$fname.'</td>
-			//                   <td>'.$sname.'</td>
-			//                   <td>'.$email.'</td>
-			//               </tr>';
-			//     }
-    		// }
-    		// else
-    		// {
+if (!$conn) {
+  echo "Failed to connect to MySQL: " . $mysqli -> connect_error;
+  exit();
+}
+// Perform a query, check for error
+elseif ($result = $conn->query($query)) {
+			    while ($row = $result->fetch_assoc()) 
+			    {
+			        $fname = $row["col1"];
+			        $sname = $row["col2"];
+			        $email = $row["col3"];
+			        echo '<tr> 
+			                  <td>'.$fname.'</td>
+			                  <td>'.$sname.'</td>
+			                  <td>'.$email.'</td>
+			              </tr>';
+			    }
+			    exit();
+    		}
+    		else
+    		{
     			echo '<tr>
     					<td>No Entries Yet</td>
     					<td>n/a</td>
     					<td>n/a</td>
     				</tr>';
-    		// }
+    				exit();
+    		}
+
+$conn -> close();
 		?>
 	</table>
 </div>

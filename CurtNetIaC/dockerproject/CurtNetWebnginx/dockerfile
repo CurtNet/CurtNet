@@ -1,3 +1,4 @@
 FROM nginx:alpine
 LABEL maintainer="curtis@mahadevan.co.uk"
-COPY ./default.conf /etc/nginx/conf.d/
+COPY ./data/default.conf /etc/nginx/conf.d/
+COPY ./data/ /var/www/html/
