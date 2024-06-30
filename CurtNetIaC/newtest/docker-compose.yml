@@ -1,16 +1,12 @@
 services:
    nginx:
-     build:
-      context: .
-      dockerfile: CurtNetWebnginx/dockerfile
+     image: curtnet/curtweb-nginx
      ports:
        - "80:80"
      networks:
        - internal
    php:
-     build:
-      context: .
-      dockerfile: CurtNetWebPHP/dockerfile
+     image: curtnet/curtweb-php
      networks:
         - internal
 networks:
