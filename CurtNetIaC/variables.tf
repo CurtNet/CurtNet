@@ -31,9 +31,10 @@ variable "health_check_path" {
   default     = "/"
 }
 variable "amis" {
-  description = "Which AMI to spawn."
+  description = "Which AMI to spawn depending on region."
   default = {
     eu-west-3 = "ami-0eb375f24fdf647b8"
+
   }
 }
 variable "instance_type" {
@@ -46,17 +47,33 @@ variable "ec2_instance_name" {
 variable "docker_compose_curtweb" {
   type = string
   default     = <<EOF
-  services:
-  nginx:
-    image: "curtnet/curtwebnginx"
-    ports: 80:80
-    volumes:
-         - ./CurtNetWebPHP/:/var/www/html/
-  php:
-    image: "curtnet/curtwebphp"
-    expose:
-        - 9000
-      volumes:
-        - ./CurtNetWebPHP/:/var/www/html/
+services:
+   nginx:
+     image: curtnet/curtweb-nginx
+     ports:
+       - "80:80"
+     networks:
+       - internal
+   php:
+     image: curtnet/curtweb-php
+     networks:
+        - internal
+networks:
+  internal:
+    driver: bridge
 EOF
 }
+
+variable "alb_root_account_id"{
+  default = "009996457667" ##### for Paris eu-west-3
+}
+data "aws_ami" "ec2_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-kernel-5.10-hvm-2.0.202*.0-x86_64-gp2"]
+  }
+}
+

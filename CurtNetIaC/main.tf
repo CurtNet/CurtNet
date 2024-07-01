@@ -17,7 +17,6 @@ locals {
   private_subnets = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 4, k)]
   public_subnets  = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 100)]
   db_subnets      = [for k, v in local.azs : cidrsubnet(var.vpc_cidr, 8, k + 150)]
-  alb_root_account_id = "009996457667" ##### for Paris eu-west-3
 }
 resource "aws_s3_bucket" "curtnet_s3_bucket" {
   bucket                = "curtnet-s3-bucket"
@@ -113,7 +112,6 @@ resource "aws_route_table" "curtnet_priv_RT"{
   route_table_id         = aws_route_table.curtnet_pub_RT.id
   gateway_id             = aws_internet_gateway.curtnet_igw.id
   destination_cidr_block = "0.0.0.0/0"
-
  }
 resource "aws_route" "private_public_route"{
   count                  = length(aws_subnet.aws_priv_subnets)

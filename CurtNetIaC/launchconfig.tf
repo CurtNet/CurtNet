@@ -1,21 +1,22 @@
 resource "aws_instance" "bastion" {
-  count                       = length(aws_subnet.aws_pub_subnets)
-  ami                         = lookup(var.amis, var.region)
+  count                       = length(aws_subnet.aws_priv_subnets)
+  ami                         = data.aws_ami.ec2_ami.image_id
   instance_type               = "${var.instance_type}"
   key_name                    = aws_key_pair.curtnet_kp.key_name
   iam_instance_profile        = aws_iam_instance_profile.session-manager.id
   associate_public_ip_address = false
-  security_groups            = [aws_security_group.ec2.id]
+  security_groups            = [aws_security_group.bastion.id]
   subnet_id                   = aws_subnet.aws_priv_subnets[count.index].id
+  
   tags = {
     Name = "bastion"
   }
 }
 resource "aws_launch_configuration" "ec2" {
   name                        = "${var.ec2_instance_name}-instances-lc"
-  image_id                    = lookup(var.amis, var.region)
+  image_id                    = data.aws_ami.ec2_ami.image_id
   instance_type               = "${var.instance_type}"
-  security_groups             = [aws_security_group.ec2.id]
+  security_groups             = [aws_security_group.ec2web.id]
   key_name                    = aws_key_pair.curtnet_kp.key_name
   iam_instance_profile        = aws_iam_instance_profile.session-manager.id
   associate_public_ip_address = false
@@ -24,12 +25,15 @@ resource "aws_launch_configuration" "ec2" {
   sudo yum update -y
   sudo yum -y install docker
   sudo service docker start
+  sudo mkdir -p /usr/local/lib/docker/cli-plugins
+  sudo curl -SL https://github.com/docker/compose/releases/download/v2.28.1/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
   sudo usermod -a -G docker ec2-user
   sudo chmod 666 /var/run/docker.sock
-  docker pull curtnet/curtwebnginx
-  docker pull curtnet/curtwebphp
-  docker run --rm --name nginx-server -d -p 80:80
-  echo "Hello World!!" | sudo tee /usr/share/nginx/html/index.html
+  sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+  echo "${var.docker_compose_curtweb}" | sudo tee /var/run/docker-compose.yml
+  cd /var/run/
+  sudo docker compose pull
+  sudo docker compose up
   EOL
   depends_on = [aws_nat_gateway.curtnet_ngw_pub]
 }

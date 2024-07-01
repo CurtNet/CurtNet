@@ -35,16 +35,24 @@ output "priroutetable_id" {
   description = "Private route table id"
   value = aws_route_table.curtnet_priv_RT[*].id
 }
-# output "dbroutetable_id" {
-#   description = "db route table id"
-#   value = aws_route_table.curtnet_db_RT[*].id
-# }
 output "alb_dns" {
   value = aws_lb.curtnet_alb[*].dns_name
 }
 output "alb_zone" {
   value = aws_lb.curtnet_alb[*].zone_id
 }
+output "nlb_dns" {
+  value = aws_lb.curtnet_nlb[*].dns_name
+}
 output "azsSel" {
   value = local.azs
+}
+output "aws_db_instance" {
+  value = aws_db_instance.db_instance[*].id
+}
+output "aws_db_instance_endpoint" {
+  value = aws_db_instance.db_instance[*].endpoint
+}
+output "ec2_ami" {
+  value = data.aws_ami.ec2_ami.image_id
 }

@@ -73,7 +73,7 @@ data "aws_iam_policy_document" "allow_access_from_alb" {
   statement {
     principals {
       type = "AWS"
-      identifiers = ["${local.alb_root_account_id}"]
+      identifiers = ["${var.alb_root_account_id}"]
     }
       sid = "AllowELBRootAccount"
       effect = "Allow"

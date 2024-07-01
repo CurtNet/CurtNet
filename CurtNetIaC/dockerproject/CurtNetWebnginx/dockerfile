@@ -1,4 +1,4 @@
-FROM nginx:alpine
+FROM trafex/php-nginx
 LABEL maintainer="curtis@mahadevan.co.uk"
 COPY ./data/default.conf /etc/nginx/conf.d/
 COPY ./data/ /var/www/html/
